@@ -29,3 +29,29 @@ customersQueue.StartListening();
 ```
 
 Also check out the sample in the samples folder.
+
+## Object Store
+
+Want to store objects in Redis? Easy:
+
+```cs
+//inherit from StoredObject
+ public class Customer : StoredObject
+    {
+        public Customer()
+        {
+            PropertyChanged += Customer_PropertyChanged;
+        }
+
+        private void Customer_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            CustomerId = StoreId;
+        }
+
+        public long CustomerId { get; set; }
+        public string Email { get; set ; }
+        public string CustomerName { get; set; }
+    }
+```
+We generate an id automatically, it's up to you to assign it to the right property in your model. Ugly? For sure, but it can be improved.
+

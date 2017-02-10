@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using StackExchange.Redis;
+using System;
 
 namespace RedisObjectStore
 {
@@ -18,17 +19,25 @@ namespace RedisObjectStore
             _db = db;
         }
 
+        public T FindObjectById(long id)
+        {
+            IDatabase db = _cm.GetDatabase(_db);
+            var serializedObject = db.StringGet($"{_storeName}:{id}");
+            return JsonConvert.DeserializeObject<T>(serializedObject);
+
+        }
+
         public T FindObject(string uniqueKey)
         {
             T result = null;
             IDatabase db = _cm.GetDatabase(_db);
 
             var objectId = db.SortedSetRank(_storeName, uniqueKey);
+
             if (objectId != null)
             {
                 objectId++;
-                var serializedObject = db.StringGet($"{_storeName}:{objectId}");
-                result = JsonConvert.DeserializeObject<T>(serializedObject);
+                result = FindObjectById(objectId.Value);
             }
 
             return result;
@@ -38,6 +47,11 @@ namespace RedisObjectStore
         {
             IDatabase db = _cm.GetDatabase(_db);
             long result = 0;
+
+            if(objectToStore.UniqueKey == null)
+            {
+                objectToStore.UniqueKey = Guid.NewGuid().ToString();
+            }
 
             var existingObjectId = db.SortedSetRank(_storeName, objectToStore.UniqueKey);
             if (existingObjectId != null)
